@@ -1,5 +1,5 @@
 ---
-title: screen_mess
+title: 双系统花屏
 date: 2016-10-19
 tags:
     - linux
