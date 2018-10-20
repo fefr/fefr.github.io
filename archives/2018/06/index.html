@@ -77,31 +77,41 @@
     <div class="columns">
         <div class="column two-thirds">
             
-                  <article id="post-screen-mess" class="repo-list">
+                  <article id="post-linux-wifi-firmware-path" class="repo-list">
     <div class="repo-list-item" >
       <h3 class="repo-list-name" itemprop="name">
         
   
-      <a class="article-title" href="/2016/10/19/screen-mess/">双系统花屏</a>
+      <a class="article-title" href="/2018/06/06/linux-wifi-firmware-path/">修改linux wifi固件路径</a>
   
 
       </h3>
       <div class="repo-list-description">
         
-          <h5 id="起因"><a href="#起因" class="headerlink" title="起因"></a>起因</h5><p>我的系統是Windows 10，后来装了Linux Mint 18组成双系统后在进入win10时都会<br>花屏一段时间后才能开始进入win10的启动画面，而且有时还会花屏很久死机，<br>死机现象特别容易出现再需要使用’禁止强制驱动签名’功能重启时。</p>
-<h5 id="原因"><a href="#原因" class="headerlink" title="原因"></a>原因</h5><p>这篇<a href="http://www.cnblogs.com/litengyao/p/4630889.html" target="_blank" rel="noopener">博客</a><br>提到因为linux只有集显驱动，系统启动时先加载Linux的显卡驱动来加载<br>选择系统的界面，导致进入Windows花屏。</p>
-<h5 id="解决办法"><a href="#解决办法" class="headerlink" title="解决办法"></a>解决办法</h5><p>在Linux系统下运行<code>sudo vim /etc/default/grub</code>后取消掉<code>GRUB_TERMINAL</code>的注<br>释，即：</p>
-<pre><code># Uncomment to disable graphical terminal (grub-pc only)
-GRUB_TERMINAL=console
-</code></pre><p>然后记得运行<code>sudo update-grub</code>后才能正式生效。</p>
-<h5 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h5><p>至此已解决Linux和Windows双系统时进入Windows会花屏的问题，修改<code>grub</code>后一定要<br>记得执行<code>update-grub</code>才能正式生效，刚开始忘记了瞎搞了好一会，在花屏时还死机<br>了。虽然选择系统时界面时难看了点，但总比花屏还可能死机强多了。</p>
+          <pre><code>[   12.186511] CONFIG-ERROR) dhd_conf_read_config: Ignore config file /system/etc/firmware/config.txt
+[   12.196629] dhdsdio_download_code_file: Open firmware file failed /system/etc/firmware/fw_bcm43455c0_ag.bin
+</code></pre><p>系统是openWRT，在开机后运行<code>ifconfig wlan0 up</code>命令时显示上边的信息，此时wlan是不能正常运行的。由提示信息知道下载固件失败。<br>使用ls命令发现并没有<code>/system/etc/</code>这个文件夹，经寻找后发现<code>firmware/*</code>在<code>/lib</code>目录下(前人在不同项目使用相同库留下的坑)。经一番搜索后发现两个地方可以修改这个路径：</p>
+<pre><code>- make kernel_menuconfig
+    Device Drivers  ---&gt;
+        [*] Network device support  ---&gt;
+            [*] Wireless LAN ---&gt;
+                &lt;M&gt; Broadcom FullMAC wireless cards support
+                (/your/path/to/firmware/bin) Firmware path
+                (your/path/to/firmware/NVRAM) NVRAM path
+
+- target/linux/imx6ul/config-*
+    CONFIG_BCMDHD_FW_PATH=&quot;/your/path/to/firmware/bin&quot;
+    CONFIG_BCMDHD_NVRAM_PATH=&quot;your/path/to/firmware/NVRAM&quot;
+
+备忘：CONFIG_BCMDHD_NVRAM_PATH在本项目中使用了bcmdhd.cal
+</code></pre><p>以上两种方法均可修改，当两种方法都使用时第二种方法可覆盖第一种方法。</p>
 
         
       </div>
       <p class="repo-list-meta">
         <span class="meta-info">
           <span class="octicon octicon-calendar"></span>
-           <time datetime="2016-10-18T16:00:00.000Z" itemprop="datePublished">2016-10-19</time>
+           <time datetime="2018-06-06T07:29:00.000Z" itemprop="datePublished">2018-06-06</time>
         </span>
 
         
@@ -113,7 +123,7 @@ GRUB_TERMINAL=console
       
         <!--
           
-            <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/linux/">linux</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/screen/">screen</a></li></ul>
+            <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Linux/">Linux</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/wifi/">wifi</a></li></ul>
           
         -->
 

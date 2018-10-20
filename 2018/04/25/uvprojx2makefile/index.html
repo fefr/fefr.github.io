@@ -8,7 +8,7 @@
 
   <link rel="icon" href="/favicon.ico">
   
-  <title>FEFR&#39;s Blog | 双系统花屏</title>
+  <title>FEFR&#39;s Blog | 把uvprojx转换成makefile</title>
   <link rel="stylesheet" href="/css/style.css">
   <link rel="stylesheet" href="/lib/fancybox/jquery.fancybox-1.3.4.css">
   <!--在这里倒入jquery 方便处理部分页面的jquery-->
@@ -38,22 +38,22 @@
 </header>
 
 	
-<section class="collection-head geopattern" data-pattern-id="双系统花屏" >
+<section class="collection-head geopattern" data-pattern-id="把uvprojx转换成makefile" >
     <div class="container">
         <div class="collection-title">
             <h1 class="collection-header">
-                双系统花屏
+                把uvprojx转换成makefile
             </h1>
             
                 <div class="collection-info">
                     <span class="meta-info">
                         <span class="octicon octicon-calendar"></span>
-                        <time datetime="2016-10-18T16:00:00.000Z" itemprop="datePublished">2016-10-19</time>
+                        <time datetime="2018-04-25T08:08:10.000Z" itemprop="datePublished">2018-04-25</time>
                     </span>
                     
                         <span class="meta-info">
                             <span class="octicon octicon-file-directory"></span>
-                            <a href='/categories/Linux/' title=''>Linux</a>
+                            <a href='/categories/CI/' title=''>CI</a>
                         </span>
                     
                 </div>
@@ -65,13 +65,21 @@
     <div class="columns">
         <div class="column  three-fourths " >
             <article class="article-content markdown-body">
-                <h5 id="起因"><a href="#起因" class="headerlink" title="起因"></a>起因</h5><p>我的系統是Windows 10，后来装了Linux Mint 18组成双系统后在进入win10时都会<br>花屏一段时间后才能开始进入win10的启动画面，而且有时还会花屏很久死机，<br>死机现象特别容易出现再需要使用’禁止强制驱动签名’功能重启时。</p>
-<h5 id="原因"><a href="#原因" class="headerlink" title="原因"></a>原因</h5><p>这篇<a href="http://www.cnblogs.com/litengyao/p/4630889.html" target="_blank" rel="noopener">博客</a><br>提到因为linux只有集显驱动，系统启动时先加载Linux的显卡驱动来加载<br>选择系统的界面，导致进入Windows花屏。</p>
-<h5 id="解决办法"><a href="#解决办法" class="headerlink" title="解决办法"></a>解决办法</h5><p>在Linux系统下运行<code>sudo vim /etc/default/grub</code>后取消掉<code>GRUB_TERMINAL</code>的注<br>释，即：</p>
-<pre><code># Uncomment to disable graphical terminal (grub-pc only)
-GRUB_TERMINAL=console
-</code></pre><p>然后记得运行<code>sudo update-grub</code>后才能正式生效。</p>
-<h5 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h5><p>至此已解决Linux和Windows双系统时进入Windows会花屏的问题，修改<code>grub</code>后一定要<br>记得执行<code>update-grub</code>才能正式生效，刚开始忘记了瞎搞了好一会，在花屏时还死机<br>了。虽然选择系统时界面时难看了点，但总比花屏还可能死机强多了。</p>
+                <p>以NRF52832为例</p>
+<p><img src="https://i.loli.net/2018/04/25/5ae03dbec8d00.png" alt="output"></p>
+<p><img src="https://i.loli.net/2018/04/25/5ae0412816468.png" alt="debug"></p>
+<p>用于生成调试信息的参数是<code>-g</code>，在<code>.uvprojx</code>里<code>&lt;DebugInformation&gt;</code>为1时会使用这个参数，0时不使用。</p>
+<p><img src="https://i.loli.net/2018/04/25/5ae04198d8bf2.png" alt="browse"></p>
+<p>同样是<code>armcc</code>但好像会有两个版本或以上，如ARM Compiler for μVision的<code>armcc</code>有一点特殊的命令<code>--omf_browse</code>。在<code>.uvprojx</code>里<code>&lt;BrowseInformation</code>为1时会使用这个参数，0时不使用。</p>
+<p><img src="https://i.loli.net/2018/04/25/5ae0425fdb924.png" alt="micro lib"></p>
+<p><img src="https://i.loli.net/2018/04/25/5ae0436df30f4.png" alt="define"></p>
+<p>当勾选Use Micro LIB时会使用<code>-D__MICROLIB</code>这个宏定义。</p>
+<p>当Floating Point Hardware是Not Used时对应<code>.uvprojx</code>里的<code>&lt;RvdsVP&gt;1&lt;/RvdsVP&gt;</code>且<code>armcc</code>的编译参数变为<code>--cpu Cortex-M4</code>，Use Single Precision对应的是<code>&lt;RvdsVP&gt;2&lt;/RvdsVP&gt;</code>且<code>armcc</code>的编译参数变为<code>--cpu Cortex-M4.fp</code>。</p>
+<p><img src="https://i.loli.net/2018/04/25/5ae044ae09b97.png" alt="C/C++"></p>
+<p>上图中的Optimization下拉选项是优化级别即<code>-O</code>参数，<default>对应<code>.uvprojx</code>里的<code>&lt;Optim&gt;0&lt;/Optim&gt;</code>，<code>-O0</code>对应的是<code>&lt;Optim&gt;1&lt;/Optim&gt;</code>，以此类推。</default></p>
+<p>当勾选One ELF Section per Function时会使用参数<code>--split_sections</code>，对应<code>.uvprojx</code>里的<code>&lt;OneElfS&gt;1&lt;/OneElfS&gt;</code>，不勾选时对应的是<code>&lt;OneElfS&gt;0&lt;/OneElfS&gt;</code>。</p>
+<p>当勾选C99 Mode时会使用参数<code>-c99</code>，对应<code>&lt;uC99&gt;1&lt;/uC99&gt;</code>，不勾选时对应<code>&lt;uC99&gt;0&lt;/uC99&gt;</code>。</p>
+<p>至于<code>--apcs=interwork</code>参数无法在<code>.uvprojx</code>找到对应的tag，但是根据ARM官方文档ARMv5T后都默认使用interwork了。</p>
 
             </article>
             
@@ -92,7 +100,7 @@ GRUB_TERMINAL=console
         <script src="/js/gitment.browser.js"></script>
          <script>
             var gitment = new Gitment({
-                id: '/2016/10/19/screen-mess/',
+                id: '/2018/04/25/uvprojx2makefile/',
                 owner: '',
                 repo: '',
                 oauth: {
@@ -118,7 +126,7 @@ GRUB_TERMINAL=console
 <div id="post-directory-module">
 	<section class="post-directory">
 		<p><strong class="toc-title">文章目录</strong></p>
-		<ol class="toc"><li class="toc-item toc-level-5"><a class="toc-link" href="#起因"><span class="toc-text">起因</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#原因"><span class="toc-text">原因</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#解决办法"><span class="toc-text">解决办法</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#总结"><span class="toc-text">总结</span></a></li></ol>
+		
 	</section>
 </div>
             

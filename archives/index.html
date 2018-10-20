@@ -77,12 +77,272 @@
     <div class="columns">
         <div class="column two-thirds">
             
+                  <article id="post-linux-wifi-firmware-path" class="repo-list">
+    <div class="repo-list-item" >
+      <h3 class="repo-list-name" itemprop="name">
+        
+  
+      <a class="article-title" href="/2018/06/06/linux-wifi-firmware-path/">修改linux wifi固件路径</a>
+  
+
+      </h3>
+      <div class="repo-list-description">
+        
+          <pre><code>[   12.186511] CONFIG-ERROR) dhd_conf_read_config: Ignore config file /system/etc/firmware/config.txt
+[   12.196629] dhdsdio_download_code_file: Open firmware file failed /system/etc/firmware/fw_bcm43455c0_ag.bin
+</code></pre><p>系统是openWRT，在开机后运行<code>ifconfig wlan0 up</code>命令时显示上边的信息，此时wlan是不能正常运行的。由提示信息知道下载固件失败。<br>使用ls命令发现并没有<code>/system/etc/</code>这个文件夹，经寻找后发现<code>firmware/*</code>在<code>/lib</code>目录下(前人在不同项目使用相同库留下的坑)。经一番搜索后发现两个地方可以修改这个路径：</p>
+<pre><code>- make kernel_menuconfig
+    Device Drivers  ---&gt;
+        [*] Network device support  ---&gt;
+            [*] Wireless LAN ---&gt;
+                &lt;M&gt; Broadcom FullMAC wireless cards support
+                (/your/path/to/firmware/bin) Firmware path
+                (your/path/to/firmware/NVRAM) NVRAM path
+
+- target/linux/imx6ul/config-*
+    CONFIG_BCMDHD_FW_PATH=&quot;/your/path/to/firmware/bin&quot;
+    CONFIG_BCMDHD_NVRAM_PATH=&quot;your/path/to/firmware/NVRAM&quot;
+
+备忘：CONFIG_BCMDHD_NVRAM_PATH在本项目中使用了bcmdhd.cal
+</code></pre><p>以上两种方法均可修改，当两种方法都使用时第二种方法可覆盖第一种方法。</p>
+
+        
+      </div>
+      <p class="repo-list-meta">
+        <span class="meta-info">
+          <span class="octicon octicon-calendar"></span>
+           <time datetime="2018-06-06T07:29:00.000Z" itemprop="datePublished">2018-06-06</time>
+        </span>
+
+        
+          <span class="meta-info">
+            <span class="octicon octicon-file-directory"></span>
+            <a href='/categories/Linux/' title=''>Linux</a>
+          </span>
+        
+      
+        <!--
+          
+            <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Linux/">Linux</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/wifi/">wifi</a></li></ul>
+          
+        -->
+
+      </p>
+    </div>
+  </article>
+            
+                  <article id="post-tslib" class="repo-list">
+    <div class="repo-list-item" >
+      <h3 class="repo-list-name" itemprop="name">
+        
+  
+      <a class="article-title" href="/2018/05/30/tslib/">tslib</a>
+  
+
+      </h3>
+      <div class="repo-list-description">
+        
+          <pre><code>sudo apt-get install libtool automake autogen autoconf libsysfs-dev
+git clone https://github.com/kergoth/tslib.git
+cd tslib
+echo  &quot;ac_cv_func_malloc_0_nonnull=yes&quot;  &gt; tmp.cache
+./autogen.sh
+./configure --host=arm-linux-eabi --cache-file=tmp.cache   --prefix=/opt/tslib CC=/opt/gcc-linaro-7.2.1-2017.11-x86_64_arm-linux-gnueabi/bin/arm-linux-gnueabi-gcc
+make  
+sudo make install  
+</code></pre>
+        
+      </div>
+      <p class="repo-list-meta">
+        <span class="meta-info">
+          <span class="octicon octicon-calendar"></span>
+           <time datetime="2018-05-30T09:10:41.000Z" itemprop="datePublished">2018-05-30</time>
+        </span>
+
+        
+          <span class="meta-info">
+            <span class="octicon octicon-file-directory"></span>
+            <a href='/categories/Linux/' title=''>Linux</a>
+          </span>
+        
+      
+        <!--
+          
+            <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Linux/">Linux</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/USB/">USB</a></li></ul>
+          
+        -->
+
+      </p>
+    </div>
+  </article>
+            
+                  <article id="post-g-mass-storage" class="repo-list">
+    <div class="repo-list-item" >
+      <h3 class="repo-list-name" itemprop="name">
+        
+  
+      <a class="article-title" href="/2018/05/24/g-mass-storage/">嵌入式linux模拟U盘</a>
+  
+
+      </h3>
+      <div class="repo-list-description">
+        
+          <p>又到项目为降成本改方案的时候(ー`´ー)，这次要砍掉WLAN那么原本通过ftp更新程序的方法没得用了，只能另辟路径。因为板子是使用USB口烧录的，那么就能利用这个USB口把某个分区当作U盘挂在PC上更换新程序了欧耶(^o^)/</p>
+<p>系统是openWRT，在命令行切换到项目目录后输入<code>make menuconfig</code>打开配置菜单，选择如下：</p>
+<pre><code>Kernel modules  ---&gt;
+    USB Support ---&gt;
+        -*- kmod-usb-core
+        &lt;*&gt; kmod-usb-f-mass-storage
+        -*- kmod-usb-gadget
+        -*- kmod-usb-lib-composite
+</code></pre><p>选择<code>kmod-usb-f-mass-storage</code>后其他会默认选中，保存后<code>make</code>编译下载到板子上。</p>
+<p>板子跑起来后向板子输入如下命令：</p>
+<pre><code>insmod /lib/module/3.14.38/configfs.ko      #3.14.38是linux版本号，根据实际情况来
+insmod /lib/module/3.14.38/libcomposite.ko
+insmod /lib/module/3.14.38/usb_f_mass_storage.ko
+insmod /lib/module/3.14.38/g_mass_storage.ko file=/dev/mtdblock5 removable=1
+</code></pre>
+        
+      </div>
+      <p class="repo-list-meta">
+        <span class="meta-info">
+          <span class="octicon octicon-calendar"></span>
+           <time datetime="2018-05-24T07:34:36.000Z" itemprop="datePublished">2018-05-24</time>
+        </span>
+
+        
+          <span class="meta-info">
+            <span class="octicon octicon-file-directory"></span>
+            <a href='/categories/Linux/' title=''>Linux</a>
+          </span>
+        
+      
+        <!--
+          
+            <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Linux/">Linux</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/USB/">USB</a></li></ul>
+          
+        -->
+
+      </p>
+    </div>
+  </article>
+            
+                  <article id="post-linux-bbt" class="repo-list">
+    <div class="repo-list-item" >
+      <h3 class="repo-list-name" itemprop="name">
+        
+  
+      <a class="article-title" href="/2018/05/11/linux-bbt/">linux BBT</a>
+  
+
+      </h3>
+      <div class="repo-list-description">
+        
+          <p>最近项目中遇到一个很奇怪的问题（如下图），一开始以为是NAND Flash出现的坏块，然后发现好几个板子也出现同样的问题就开始怀疑是分区表大小超出实际大小。<br><img src="https://i.loli.net/2018/05/11/5af5325ed283b.jpg" alt="badblock"></p>
+<p>分区大小在dts文件中可以查询得到，排查后发现不是这个原因导致。接着只能看看dts中关于分区的其他<a href="https://www.kernel.org/doc/Documentation/devicetree/bindings/mtd/gpmi-nand.txt" target="_blank" rel="noopener">参数意义</a>，留意到其中的<code>nand-on-flash-bbt</code>，字面意思就是坏块管理表（Bad Block Table, BBT)保存在flash中。既然要保存到flash那么就肯定要消耗flash的空间，经过一番google后终于找到问题所在。<br>参考<a href="http://cmchao.logdown.com/posts/61616-nand-flash-support-in-linux" target="_blank" rel="noopener">这里</a>留意到图上maxblocks占用了最后4个block用作BBT，这不就和出现的问题符合嘛。本着<br>认真负责的态度去查看我们的代码，根据那篇文章中图片的提示搜索bbt_main_descr(KDE的Dolphin真好用哈哈，可以搜索文件夹内的所有文件的内容，又快又好)，在linux内核下的<code>/drivers/mtd/nand/nand_bbt.c</code>下可以找到：</p>
+<pre><code>static struct nand_bbt_descr bbt_main_descr = {
+    .options = NAND_BBT_LASTBLOCK | NAND_BBT_CREATE | NAND_BBT_WRITE
+        | NAND_BBT_2BIT | NAND_BBT_VERSION | NAND_BBT_PERCHIP,
+    .offs = 8,
+    .len = 4,
+    .veroffs = 12,
+    .maxblocks = NAND_BBT_SCAN_MAXBLOCKS,
+    .pattern = bbt_pattern
+};
+</code></pre><p><code>NAND_BBT_LASTBLOCK</code> 和 <code>NAND_BBT_SCAN_MAXBLOCKS</code>均在<code>/include/linux/mtd/bbm.h</code>下定义，<code>NAND_BBT_LASTBLOCK</code>表示BBT在flash最后的几个block，<code>NAND_BBT_SCAN_MAXBLOCKS</code>被定义为4刚好和出现的问题现象相符合。<br>折腾了几天终于找到问题所在了。。并且最后在一篇<a href="http://www.linux-mtd.infradead.org/tech/mtdnand/x144.html" target="_blank" rel="noopener">文档</a>中找到这个描述:</p>
+<blockquote>
+<ul>
+<li>Store bad block table per chip</li>
+<li>Use 2 bits per block</li>
+<li>Automatic placement at the end of the chip</li>
+<li>Use mirrored tables with version numbers</li>
+<li>Reserve 4 blocks at the end of the chip</li>
+</ul>
+</blockquote>
+
+        
+      </div>
+      <p class="repo-list-meta">
+        <span class="meta-info">
+          <span class="octicon octicon-calendar"></span>
+           <time datetime="2018-05-11T05:46:39.000Z" itemprop="datePublished">2018-05-11</time>
+        </span>
+
+        
+          <span class="meta-info">
+            <span class="octicon octicon-file-directory"></span>
+            <a href='/categories/Linux/' title=''>Linux</a>
+          </span>
+        
+      
+        <!--
+          
+            <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/BBT/">BBT</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Linux/">Linux</a></li></ul>
+          
+        -->
+
+      </p>
+    </div>
+  </article>
+            
+                  <article id="post-uvprojx2makefile" class="repo-list">
+    <div class="repo-list-item" >
+      <h3 class="repo-list-name" itemprop="name">
+        
+  
+      <a class="article-title" href="/2018/04/25/uvprojx2makefile/">把uvprojx转换成makefile</a>
+  
+
+      </h3>
+      <div class="repo-list-description">
+        
+          <p>以NRF52832为例</p>
+<p><img src="https://i.loli.net/2018/04/25/5ae03dbec8d00.png" alt="output"></p>
+<p><img src="https://i.loli.net/2018/04/25/5ae0412816468.png" alt="debug"></p>
+<p>用于生成调试信息的参数是<code>-g</code>，在<code>.uvprojx</code>里<code>&lt;DebugInformation&gt;</code>为1时会使用这个参数，0时不使用。</p>
+<p><img src="https://i.loli.net/2018/04/25/5ae04198d8bf2.png" alt="browse"></p>
+<p>同样是<code>armcc</code>但好像会有两个版本或以上，如ARM Compiler for μVision的<code>armcc</code>有一点特殊的命令<code>--omf_browse</code>。在<code>.uvprojx</code>里<code>&lt;BrowseInformation</code>为1时会使用这个参数，0时不使用。</p>
+<p><img src="https://i.loli.net/2018/04/25/5ae0425fdb924.png" alt="micro lib"></p>
+<p><img src="https://i.loli.net/2018/04/25/5ae0436df30f4.png" alt="define"></p>
+<p>当勾选Use Micro LIB时会使用<code>-D__MICROLIB</code>这个宏定义。</p>
+<p>当Floating Point Hardware是Not Used时对应<code>.uvprojx</code>里的<code>&lt;RvdsVP&gt;1&lt;/RvdsVP&gt;</code>且<code>armcc</code>的编译参数变为<code>--cpu Cortex-M4</code>，Use Single Precision对应的是<code>&lt;RvdsVP&gt;2&lt;/RvdsVP&gt;</code>且<code>armcc</code>的编译参数变为<code>--cpu Cortex-M4.fp</code>。</p>
+<p><img src="https://i.loli.net/2018/04/25/5ae044ae09b97.png" alt="C/C++"></p>
+<p>上图中的Optimization下拉选项是优化级别即<code>-O</code>参数，<default>对应<code>.uvprojx</code>里的<code>&lt;Optim&gt;0&lt;/Optim&gt;</code>，<code>-O0</code>对应的是<code>&lt;Optim&gt;1&lt;/Optim&gt;</code>，以此类推。</default></p>
+<p>当勾选One ELF Section per Function时会使用参数<code>--split_sections</code>，对应<code>.uvprojx</code>里的<code>&lt;OneElfS&gt;1&lt;/OneElfS&gt;</code>，不勾选时对应的是<code>&lt;OneElfS&gt;0&lt;/OneElfS&gt;</code>。</p>
+<p>当勾选C99 Mode时会使用参数<code>-c99</code>，对应<code>&lt;uC99&gt;1&lt;/uC99&gt;</code>，不勾选时对应<code>&lt;uC99&gt;0&lt;/uC99&gt;</code>。</p>
+<p>至于<code>--apcs=interwork</code>参数无法在<code>.uvprojx</code>找到对应的tag，但是根据ARM官方文档ARMv5T后都默认使用interwork了。</p>
+
+        
+      </div>
+      <p class="repo-list-meta">
+        <span class="meta-info">
+          <span class="octicon octicon-calendar"></span>
+           <time datetime="2018-04-25T08:08:10.000Z" itemprop="datePublished">2018-04-25</time>
+        </span>
+
+        
+          <span class="meta-info">
+            <span class="octicon octicon-file-directory"></span>
+            <a href='/categories/CI/' title=''>CI</a>
+          </span>
+        
+      
+        <!--
+          
+            <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/CI/">CI</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Makefile/">Makefile</a></li></ul>
+          
+        -->
+
+      </p>
+    </div>
+  </article>
+            
                   <article id="post-screen-mess" class="repo-list">
     <div class="repo-list-item" >
       <h3 class="repo-list-name" itemprop="name">
         
   
-      <a class="article-title" href="/2016/10/19/screen-mess/">screen_mess</a>
+      <a class="article-title" href="/2016/10/19/screen-mess/">双系统花屏</a>
   
 
       </h3>

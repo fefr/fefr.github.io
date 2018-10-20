@@ -77,31 +77,45 @@
     <div class="columns">
         <div class="column two-thirds">
             
-                  <article id="post-screen-mess" class="repo-list">
+                  <article id="post-linux-bbt" class="repo-list">
     <div class="repo-list-item" >
       <h3 class="repo-list-name" itemprop="name">
         
   
-      <a class="article-title" href="/2016/10/19/screen-mess/">双系统花屏</a>
+      <a class="article-title" href="/2018/05/11/linux-bbt/">linux BBT</a>
   
 
       </h3>
       <div class="repo-list-description">
         
-          <h5 id="起因"><a href="#起因" class="headerlink" title="起因"></a>起因</h5><p>我的系統是Windows 10，后来装了Linux Mint 18组成双系统后在进入win10时都会<br>花屏一段时间后才能开始进入win10的启动画面，而且有时还会花屏很久死机，<br>死机现象特别容易出现再需要使用’禁止强制驱动签名’功能重启时。</p>
-<h5 id="原因"><a href="#原因" class="headerlink" title="原因"></a>原因</h5><p>这篇<a href="http://www.cnblogs.com/litengyao/p/4630889.html" target="_blank" rel="noopener">博客</a><br>提到因为linux只有集显驱动，系统启动时先加载Linux的显卡驱动来加载<br>选择系统的界面，导致进入Windows花屏。</p>
-<h5 id="解决办法"><a href="#解决办法" class="headerlink" title="解决办法"></a>解决办法</h5><p>在Linux系统下运行<code>sudo vim /etc/default/grub</code>后取消掉<code>GRUB_TERMINAL</code>的注<br>释，即：</p>
-<pre><code># Uncomment to disable graphical terminal (grub-pc only)
-GRUB_TERMINAL=console
-</code></pre><p>然后记得运行<code>sudo update-grub</code>后才能正式生效。</p>
-<h5 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h5><p>至此已解决Linux和Windows双系统时进入Windows会花屏的问题，修改<code>grub</code>后一定要<br>记得执行<code>update-grub</code>才能正式生效，刚开始忘记了瞎搞了好一会，在花屏时还死机<br>了。虽然选择系统时界面时难看了点，但总比花屏还可能死机强多了。</p>
+          <p>最近项目中遇到一个很奇怪的问题（如下图），一开始以为是NAND Flash出现的坏块，然后发现好几个板子也出现同样的问题就开始怀疑是分区表大小超出实际大小。<br><img src="https://i.loli.net/2018/05/11/5af5325ed283b.jpg" alt="badblock"></p>
+<p>分区大小在dts文件中可以查询得到，排查后发现不是这个原因导致。接着只能看看dts中关于分区的其他<a href="https://www.kernel.org/doc/Documentation/devicetree/bindings/mtd/gpmi-nand.txt" target="_blank" rel="noopener">参数意义</a>，留意到其中的<code>nand-on-flash-bbt</code>，字面意思就是坏块管理表（Bad Block Table, BBT)保存在flash中。既然要保存到flash那么就肯定要消耗flash的空间，经过一番google后终于找到问题所在。<br>参考<a href="http://cmchao.logdown.com/posts/61616-nand-flash-support-in-linux" target="_blank" rel="noopener">这里</a>留意到图上maxblocks占用了最后4个block用作BBT，这不就和出现的问题符合嘛。本着<br>认真负责的态度去查看我们的代码，根据那篇文章中图片的提示搜索bbt_main_descr(KDE的Dolphin真好用哈哈，可以搜索文件夹内的所有文件的内容，又快又好)，在linux内核下的<code>/drivers/mtd/nand/nand_bbt.c</code>下可以找到：</p>
+<pre><code>static struct nand_bbt_descr bbt_main_descr = {
+    .options = NAND_BBT_LASTBLOCK | NAND_BBT_CREATE | NAND_BBT_WRITE
+        | NAND_BBT_2BIT | NAND_BBT_VERSION | NAND_BBT_PERCHIP,
+    .offs = 8,
+    .len = 4,
+    .veroffs = 12,
+    .maxblocks = NAND_BBT_SCAN_MAXBLOCKS,
+    .pattern = bbt_pattern
+};
+</code></pre><p><code>NAND_BBT_LASTBLOCK</code> 和 <code>NAND_BBT_SCAN_MAXBLOCKS</code>均在<code>/include/linux/mtd/bbm.h</code>下定义，<code>NAND_BBT_LASTBLOCK</code>表示BBT在flash最后的几个block，<code>NAND_BBT_SCAN_MAXBLOCKS</code>被定义为4刚好和出现的问题现象相符合。<br>折腾了几天终于找到问题所在了。。并且最后在一篇<a href="http://www.linux-mtd.infradead.org/tech/mtdnand/x144.html" target="_blank" rel="noopener">文档</a>中找到这个描述:</p>
+<blockquote>
+<ul>
+<li>Store bad block table per chip</li>
+<li>Use 2 bits per block</li>
+<li>Automatic placement at the end of the chip</li>
+<li>Use mirrored tables with version numbers</li>
+<li>Reserve 4 blocks at the end of the chip</li>
+</ul>
+</blockquote>
 
         
       </div>
       <p class="repo-list-meta">
         <span class="meta-info">
           <span class="octicon octicon-calendar"></span>
-           <time datetime="2016-10-18T16:00:00.000Z" itemprop="datePublished">2016-10-19</time>
+           <time datetime="2018-05-11T05:46:39.000Z" itemprop="datePublished">2018-05-11</time>
         </span>
 
         
@@ -113,7 +127,7 @@ GRUB_TERMINAL=console
       
         <!--
           
-            <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/linux/">linux</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/screen/">screen</a></li></ul>
+            <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/BBT/">BBT</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Linux/">Linux</a></li></ul>
           
         -->
 

@@ -77,31 +77,32 @@
     <div class="columns">
         <div class="column two-thirds">
             
-                  <article id="post-screen-mess" class="repo-list">
+                  <article id="post-tslib" class="repo-list">
     <div class="repo-list-item" >
       <h3 class="repo-list-name" itemprop="name">
         
   
-      <a class="article-title" href="/2016/10/19/screen-mess/">双系统花屏</a>
+      <a class="article-title" href="/2018/05/30/tslib/">tslib</a>
   
 
       </h3>
       <div class="repo-list-description">
         
-          <h5 id="起因"><a href="#起因" class="headerlink" title="起因"></a>起因</h5><p>我的系統是Windows 10，后来装了Linux Mint 18组成双系统后在进入win10时都会<br>花屏一段时间后才能开始进入win10的启动画面，而且有时还会花屏很久死机，<br>死机现象特别容易出现再需要使用’禁止强制驱动签名’功能重启时。</p>
-<h5 id="原因"><a href="#原因" class="headerlink" title="原因"></a>原因</h5><p>这篇<a href="http://www.cnblogs.com/litengyao/p/4630889.html" target="_blank" rel="noopener">博客</a><br>提到因为linux只有集显驱动，系统启动时先加载Linux的显卡驱动来加载<br>选择系统的界面，导致进入Windows花屏。</p>
-<h5 id="解决办法"><a href="#解决办法" class="headerlink" title="解决办法"></a>解决办法</h5><p>在Linux系统下运行<code>sudo vim /etc/default/grub</code>后取消掉<code>GRUB_TERMINAL</code>的注<br>释，即：</p>
-<pre><code># Uncomment to disable graphical terminal (grub-pc only)
-GRUB_TERMINAL=console
-</code></pre><p>然后记得运行<code>sudo update-grub</code>后才能正式生效。</p>
-<h5 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h5><p>至此已解决Linux和Windows双系统时进入Windows会花屏的问题，修改<code>grub</code>后一定要<br>记得执行<code>update-grub</code>才能正式生效，刚开始忘记了瞎搞了好一会，在花屏时还死机<br>了。虽然选择系统时界面时难看了点，但总比花屏还可能死机强多了。</p>
-
+          <pre><code>sudo apt-get install libtool automake autogen autoconf libsysfs-dev
+git clone https://github.com/kergoth/tslib.git
+cd tslib
+echo  &quot;ac_cv_func_malloc_0_nonnull=yes&quot;  &gt; tmp.cache
+./autogen.sh
+./configure --host=arm-linux-eabi --cache-file=tmp.cache   --prefix=/opt/tslib CC=/opt/gcc-linaro-7.2.1-2017.11-x86_64_arm-linux-gnueabi/bin/arm-linux-gnueabi-gcc
+make  
+sudo make install  
+</code></pre>
         
       </div>
       <p class="repo-list-meta">
         <span class="meta-info">
           <span class="octicon octicon-calendar"></span>
-           <time datetime="2016-10-18T16:00:00.000Z" itemprop="datePublished">2016-10-19</time>
+           <time datetime="2018-05-30T09:10:41.000Z" itemprop="datePublished">2018-05-30</time>
         </span>
 
         
@@ -113,7 +114,58 @@ GRUB_TERMINAL=console
       
         <!--
           
-            <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/linux/">linux</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/screen/">screen</a></li></ul>
+            <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Linux/">Linux</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/USB/">USB</a></li></ul>
+          
+        -->
+
+      </p>
+    </div>
+  </article>
+            
+                  <article id="post-g-mass-storage" class="repo-list">
+    <div class="repo-list-item" >
+      <h3 class="repo-list-name" itemprop="name">
+        
+  
+      <a class="article-title" href="/2018/05/24/g-mass-storage/">嵌入式linux模拟U盘</a>
+  
+
+      </h3>
+      <div class="repo-list-description">
+        
+          <p>又到项目为降成本改方案的时候(ー`´ー)，这次要砍掉WLAN那么原本通过ftp更新程序的方法没得用了，只能另辟路径。因为板子是使用USB口烧录的，那么就能利用这个USB口把某个分区当作U盘挂在PC上更换新程序了欧耶(^o^)/</p>
+<p>系统是openWRT，在命令行切换到项目目录后输入<code>make menuconfig</code>打开配置菜单，选择如下：</p>
+<pre><code>Kernel modules  ---&gt;
+    USB Support ---&gt;
+        -*- kmod-usb-core
+        &lt;*&gt; kmod-usb-f-mass-storage
+        -*- kmod-usb-gadget
+        -*- kmod-usb-lib-composite
+</code></pre><p>选择<code>kmod-usb-f-mass-storage</code>后其他会默认选中，保存后<code>make</code>编译下载到板子上。</p>
+<p>板子跑起来后向板子输入如下命令：</p>
+<pre><code>insmod /lib/module/3.14.38/configfs.ko      #3.14.38是linux版本号，根据实际情况来
+insmod /lib/module/3.14.38/libcomposite.ko
+insmod /lib/module/3.14.38/usb_f_mass_storage.ko
+insmod /lib/module/3.14.38/g_mass_storage.ko file=/dev/mtdblock5 removable=1
+</code></pre>
+        
+      </div>
+      <p class="repo-list-meta">
+        <span class="meta-info">
+          <span class="octicon octicon-calendar"></span>
+           <time datetime="2018-05-24T07:34:36.000Z" itemprop="datePublished">2018-05-24</time>
+        </span>
+
+        
+          <span class="meta-info">
+            <span class="octicon octicon-file-directory"></span>
+            <a href='/categories/Linux/' title=''>Linux</a>
+          </span>
+        
+      
+        <!--
+          
+            <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Linux/">Linux</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/USB/">USB</a></li></ul>
           
         -->
 
